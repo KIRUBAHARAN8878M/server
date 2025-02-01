@@ -70,7 +70,7 @@ const forgotPassword = async (req, res) => {
         to: user.email,
         subject: "Password Reset Request",
         text: `Click the link below to reset your password (valid for 15 minutes):
-        http://localhost:3000/reset-password?token=${token}`,
+        https://e-shop-o3v5.onrender.com/reset-password?token=${token}`,
       };
   
       await transporter.sendMail(mailOptions);
