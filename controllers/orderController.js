@@ -1,31 +1,35 @@
 const Order = require("../models/Order");
 
-const createOrder = async (req, res) => {
+
+const getUserOrders = async (req, res) => {
   try {
-    const { items } = req.body;
-    const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const userId = req.user.id; // Get user ID from auth middleware
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
-    const newOrder = new Order({ items, totalPrice });
-    await newOrder.save();
-
-    res.status(201).json(newOrder);
+    res.status(200).json(orders);
   } catch (error) {
-    res.status(500).json({ message: "Error creating order" });
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-const getOrders = async (req, res) => {
-    try {
-      const orders = await Order.find().sort({ createdAt: -1 }); // Fetch latest orders first
-      res.json(
-        orders.map((order) => ({
-          ...order._doc,
-          formattedDate: new Date(order.createdAt).toLocaleString(), // ✅ Format order date
-        }))
-      );
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching orders" });
-    }
-  };
 
-module.exports = { createOrder,getOrders };
+const placeOrder = async (req, res) => {
+  try {
+    const { items, totalPrice } = req.body;
+    const newOrder = new Order({
+      userId: req.user.id, // Assign the order to the logged-in user
+      items,
+      totalPrice,
+      createdAt: new Date(),
+    });
+
+    await newOrder.save();
+    res.status(201).json({ message: "Order placed successfully", order: newOrder });
+  } catch (error) {
+    console.error("Error placing order:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { placeOrder,  getUserOrders};
